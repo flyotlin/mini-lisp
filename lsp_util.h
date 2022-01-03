@@ -18,7 +18,7 @@ typedef struct func_t func;
 
 // enum all available mini-lisp types
 enum Type {
-    BOOL, NUM, FUNC
+    BOOL_T, NUM_T, FUNC_T, ID_T
 };
 typedef enum Type Type;
 
@@ -28,6 +28,7 @@ struct TypeStruct {
     bool bool_t;
     int num_t;
     func func_t;
+    string id_t;
 };
 
 #define YYSTYPE TypeStruct  // overwrite YYSTYPE to self-defined struct
