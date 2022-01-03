@@ -1,2 +1,5 @@
 /ref
 .DS_Store
+lex.yy.*
+y.tab.*
+minilsp
