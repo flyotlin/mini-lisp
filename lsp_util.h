@@ -10,17 +10,17 @@
 using namespace std;
 
 // mini-lisp type function
-typedef struct func_t func;
 struct func_t {
     vector<int> vec;
     string func_name;
 };
+typedef struct func_t func;
 
 // enum all available mini-lisp types
-typedef enum Type Type;
 enum Type {
     BOOL, NUM, FUNC
 };
+typedef enum Type Type;
 
 // overwritten YYSTYPE (yylval)
 struct TypeStruct {

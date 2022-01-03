@@ -16,10 +16,8 @@ extern "C" {
     return NUMBER;
 }
 
-%%
-
-int main(int argc, char *argv[])
-{
-    yylex();
-    return 0;
+. { 
+    return yytext[0];
 }
+
+%%
