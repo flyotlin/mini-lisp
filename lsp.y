@@ -211,7 +211,7 @@ NOT-OP:
 
 DEF-STMT:
     '(' DEFINE_VAR VARIABLE EXP ')' {
-        traverse($4);
+        if ($4->type != "func") traverse($4);
         global_vars[$3->sval] = $4;
     }
 ;
@@ -252,9 +252,14 @@ FUN-BODY:
 
 FUN-CALL:
     '(' FUN-EXP PARAMS ')' {
+        traverse($3);
         $$ = createNode($3, $2, "func_call");
     }
-    | '(' FUN-NAME PARAMS ')'
+    | '(' FUN-NAME PARAMS ')' {
+        if (global_vars.find($2->sval) != global_vars.end()) {
+            $$ = createNode($3, global_vars[$2->sval], "func_call");
+        }
+    }
 ;
 
 FUN-NAME:
@@ -264,13 +269,22 @@ FUN-NAME:
 ;
 
 PARAMS:
-    EXP PARAMS {
+    PARAM-EXP PARAMS {
         $1->left = $2;
         $1->right = NULL;
         $$ = $1;
     }
     | {
         $$ = NULL;
+    }
+;
+
+PARAM-EXP:
+    EXP {
+        Node *p = new Node();
+        traverse($1);
+        p->val = $1->val;
+        $$ = p;
     }
 ;
 
