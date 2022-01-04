@@ -23,17 +23,19 @@ digit [0-9]
 }
 
 "#t"|"#f" {     /* bool-val */
-    yylval.type = BOOL_T;
+    yylval = new Node();
+    yylval->type = "b";
     if (!strcmp(yytext, "#t"))
-        yylval.bool_t = true;
+        yylval->bval = true;
     else if (!strcmp(yytext, "#f"))
-        yylval.bool_t = false;
+        yylval->bval = false;
     return BOOLEAN;
 }
 
 0|[1-9]{digit}*|"-"[1-9]{digit}* {  /* Positive Number and 0 */
-    yylval.type = NUM_T;
-    yylval.num_t = atoi(yytext);
+    yylval = new Node();
+    yylval->type = "d";
+    yylval->ival = atoi(yytext);
     return NUMBER;
 }
 
@@ -70,8 +72,9 @@ digit [0-9]
 }
 
 {letter}({letter}|{digit}|"-")* {   /* IDENTIFIER */
-    yylval.type = ID_T;
-    yylval.id_t = yytext;
+    yylval = new Node();
+    yylval->type = "s";
+    yylval->sval = yytext;
     return ID;
 }
 

@@ -5,22 +5,34 @@ extern "C" {
     void yyerror(const char *msg);
     extern int yylex(void);
 }
+
+Node* root;
+Node* createNode(Node*, Node*, string);
+void traverse(Node*);
 %}
 
 %token NUMBER
 %token BOOLEAN
 %token ID
 %token '+' '-' '*' '/' '>' '<' '=' '(' ')' MOD_OP AND_OP OR_OP NOT_OP PRINT_NUM PRINT_BOOL IF_STMT DEFINE_VAR FUN_DECL
-%type PROGRAM STMT EXP DEF-STMT PRINT-STMT NUM-OP VARIABLE NUM-OP LOGICAL-OP FUN-EXP FUN-CALL IF-EXP NUM-OP-EXPs VARIABLE FUN-ID FUN_IDs FUN-BODY FUN-NAME PARAMS TEST-EXP THAN-EXP ELSE-EXP
+%type PROGRAM STMT EXP DEF-STMT PRINT-STMT NUM-OP VARIABLE NUM-OP LOGICAL-OP FUN-EXP FUN-CALL IF-EXP VARIABLE FUN-ID FUN_IDs FUN-BODY FUN-NAME PARAMS TEST-EXP THAN-EXP ELSE-EXP
 %type PLUS MINUS MULTIPLY DIVIDE MODULUS GREATER SMALLER EQUAL AND-OP OR-OP NOT-OP
 
 %%
 
 PROGRAM: 
-    STMT PROGRAM {
+    STMTS {
+        root = $1;
+    }
+;
+
+STMTS:
+    STMT STMTS {
+        $$ = createNode($1, $2, "non_t");
+    }
+    | STMT {
         $$ = $1;
     }
-    |
 ;
 
 STMT:
@@ -33,15 +45,16 @@ STMT:
 
 PRINT-STMT:
     '(' PRINT_NUM EXP ')' {
-        if ($3.type == NUM_T)
-            cout << $3.num_t << endl;
-        else
-            cout << "some error happened\n";
+        $$ = createNode($3, NULL, "pn");
     }
-    | '(' PRINT_BOOL EXP ')'
+    | '(' PRINT_BOOL EXP ')' {
+        $$ = createNode($3, NULL, "pb");
+    }
 
 EXP:
-    BOOLEAN
+    BOOLEAN {
+        $$ = $1;
+    }
     | NUMBER {
         $$ = $1;
     }
@@ -49,18 +62,14 @@ EXP:
     | NUM-OP {
         $$ = $1;
     }
-    | LOGICAL-OP
+    | LOGICAL-OP {
+        $$ = $1;
+    }
     | FUN-EXP
     | FUN-CALL
-    | IF-EXP
-;
-
-NUM-OP-EXPs:
-    EXP NUM-OP-EXPs {
-        $$.type = NUM_T;
-        $$.num_t = $1.num_t + $2.num_t;
+    | IF-EXP {
+        $$ = $1;
     }
-    |
 ;
 
 NUM-OP:
@@ -75,66 +84,120 @@ NUM-OP:
 ;
 
 PLUS:
-    '(' '+' EXP NUM-OP-EXPs ')' {
-        $$.type = NUM_T;
-        $$.num_t = $3.num_t + $4.num_t;
+    '(' '+' EXP PLUS-EXPs ')' {
+        $$ = createNode($3, $4, "+");
+    }
+;
+
+PLUS-EXPs:
+    EXP PLUS-EXPs {
+        $$ = createNode($1, $2, "+");
+    }
+    | EXP {
+        $$ = $1;
     }
 ;
 
 MINUS:
     '(' '-' EXP EXP ')' {
-        $$.type = NUM_T;
-        $$.num_t = $3.num_t - $4.num_t;
+        $$ = createNode($3, $4, "-");
     }
 ;
 
 MULTIPLY:
-    '(' '*' EXP NUM-OP-EXPs ')' {
-        $$.type = NUM_T;
-        $$.num_t = $3.num_t * $4.num_t;
+    '(' '*' EXP MUL-EXPs ')' {
+        $$ = createNode($3, $4, "*");
+    }
+;
+
+MUL-EXPs:
+    EXP MUL-EXPs {
+        $$ = createNode($1, $2, "*");
+    }
+    | EXP {
+        $$ = $1;
     }
 ;
 
 DIVIDE:
     '(' '/' EXP EXP ')' {
-        $$.type = NUM_T;
-        $$.num_t = $3.num_t / $4.num_t;
+        $$ = createNode($3, $4, "/");
     }
 ;
 
 MODULUS:
     '(' MOD_OP EXP EXP ')' {
-        $$.type = NUM_T;
-        $$.num_t = $3.num_t % $4.num_t;
+        $$ = createNode($3, $4, "%");
     }
 ;
 
 GREATER:
-    '(' '>' EXP EXP ')'
+    '(' '>' EXP EXP ')' {
+        $$ = createNode($3, $4, ">");
+    }
 ;
 
 SMALLER:
-    '(' '<' EXP EXP ')'
+    '(' '<' EXP EXP ')' {
+        $$ = createNode($3, $4, "<");
+    }
 ;
 
 EQUAL:
-    '(' '=' EXP NUM-OP-EXPs ')'
+    '(' '=' EXP EQUAL-EXPs ')' {
+        $$ = createNode($3, $4, "=");
+    }
+;
+
+EQUAL-EXPs:
+    EXP EQUAL-EXPs {
+        $$ = createNode($1, $2, "=");
+    }
+    | EXP {
+        $$ = $1;
+    }
 ;
 
 LOGICAL-OP:
-    AND-OP | OR-OP | NOT-OP
+    AND-OP { $$ = $1; }
+    | OR-OP { $$ = $1; }
+    | NOT-OP { $$ = $1; }
 ;
 
 AND-OP:
-    '(' AND_OP EXP NUM-OP-EXPs ')'
+    '(' AND_OP EXP AND-EXPs ')' {
+        $$ = createNode($3, $4, "&");
+    }
+;
+
+AND-EXPs:
+    EXP AND-EXPs {
+        $$ = createNode($1, $2, "&");
+    }
+    | EXP {
+        $$ = $1;
+    }
 ;
 
 OR-OP:
-    '(' OR_OP EXP NUM-OP-EXPs ')'
+    '(' OR_OP EXP OR-EXPs ')' {
+        $$ = createNode($3, $4, "|");
+    }
+;
+
+OR-EXPs:
+    EXP OR-EXPs {
+        $$ = createNode($1, $2, "|");
+    }
+    | EXP {
+        $$ = $1;
+    }
 ;
 
 NOT-OP:
-    '(' NOT_OP EXP ')'
+    '(' NOT_OP EXP ')' {
+        $$ = createNode($3, NULL, "!");
+    }
 ;
 
 DEF-STMT:
@@ -196,6 +259,72 @@ ELSE-EXP:
 
 %%
 
+Node* createNode(Node* left, Node* right, string type)
+{
+    Node* cur = new Node();
+
+    cur->type = type;
+    cur->left = left;
+    cur->right = right;
+
+    return cur;
+}
+
+void traverse(Node* cur)
+{
+    if (!cur) {
+        // cout << "cur type: null" << endl;
+        return;
+    }
+
+    // cout << "cur type: " << cur->type << ", and cur value: " << cur->ival << endl;
+    traverse(cur->left);
+    traverse(cur->right);
+
+    if (cur->type == "pn") {
+        printf("%d\n", cur->left->ival);
+    } else if (cur->type == "pb") {
+        if (cur->left->bval == true)  printf("#t\n");
+        else    printf("#f\n");
+    } else if (cur->type == "+") {
+        cur->ival = cur->left->ival + cur->right->ival;
+    } else if (cur->type == "-") {
+        cur->ival = cur->left->ival - cur->right->ival;
+    } else if (cur->type == "*") {
+        cur->ival = cur->left->ival * cur->right->ival;
+    } else if (cur->type == "/") {
+        cur->ival = cur->left->ival / cur->right->ival;
+    } else if (cur->type == "%") {
+        cur->ival = cur->left->ival % cur->right->ival;
+    } else if (cur->type == "&") {
+        cur->bval = cur->left->bval && cur->right->bval;
+    } else if (cur->type == "|") {
+        cur->bval = cur->left->bval || cur->right->bval;
+    } else if (cur->type == "!") {
+        cur->bval = !cur->left->bval;
+    } else if (cur->type == ">") {
+        if (cur->left->ival > cur->right->ival) {
+            cur->bval = true;
+        } else {
+            cur->bval = false;
+        }
+    } else if (cur->type == "<") {
+        if (cur->left->ival < cur->right->ival) {
+            cur->bval = true;
+        } else {
+            cur->bval = false;
+        }
+    } else if (cur->type == "=") {
+        cout << cur->left->ival << " " << cur->right->ival << endl;
+        if (cur->left->ival == cur->right->ival) {
+            cur->bval = true;
+        } else {
+            cur->bval = false;
+        }
+    }
+
+}
+
 void yyerror(const char *msg)
 {
     cout << msg << "\n";
@@ -204,5 +333,7 @@ void yyerror(const char *msg)
 int main(int argc, char *argv[])
 {
     yyparse();
+
+    traverse(root);
     return 0;
 }
