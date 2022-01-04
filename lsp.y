@@ -11,7 +11,8 @@ Node* createNode(Node*, Node*, string);
 Node* createNode(Node*, Node*, Node*, string);
 void traverse(Node*);
 int FALSENUM = -2342377;
-unordered_map<string, int> global_vars;
+unordered_map<string, Node*> global_vars;
+stack<unordered_map<string, Node*>> func_stack;   // function first refers to local var in func_stack, then check global_vars
 %}
 
 %token NUMBER
@@ -62,7 +63,7 @@ EXP:
         $$ = $1;
     }
     | VARIABLE {
-        $1->val = global_vars[$1->sval];
+        $1->val = global_vars[$1->sval]->val;
         $$ = $1;
     }
     | NUM-OP {
@@ -209,7 +210,7 @@ NOT-OP:
 DEF-STMT:
     '(' DEFINE_VAR VARIABLE EXP ')' {
         traverse($4);
-        global_vars[$3->sval] = $4->val;
+        global_vars[$3->sval] = $4;
     }
 ;
 
@@ -336,10 +337,10 @@ void traverse(Node* cur)
         else
             cur->val = 1;
     } else if (cur->type == "!") {
-        if (cur->left->val == 1)
-            cur->val = FALSENUM;
-        else if (cur->left->val == 0)
+        if (cur->left->val == FALSENUM)
             cur->val = 1;
+        else
+            cur->val = FALSENUM;
     } else if (cur->type == ">") {
         if (cur->left->val > cur->right->val) {
             cur->val = 1;
