@@ -1,5 +1,15 @@
 # Mini-Lisp Final Project
 
+## How to Execute
+
+1. `$ cd mini-lisp`
+
+2. `$ chmod +x make.sh`
+
+3. `$ ./make.sh`
+
+4. `$ ./minilisp < [input files]`
+
 ## Implementation
 
 Create an **AST**(Abstract syntax tree) while yacc does parsing, then traverse the AST in postorder.
