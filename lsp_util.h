@@ -20,8 +20,7 @@ typedef struct func_t func;
 struct Node {
     string type;
 
-    int ival;
-    bool bval;
+    int val;
     string sval;
 
     struct Node *left;

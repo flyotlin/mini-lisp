@@ -9,6 +9,7 @@ extern "C" {
 Node* root;
 Node* createNode(Node*, Node*, string);
 void traverse(Node*);
+int FALSENUM = -2342377;
 %}
 
 %token NUMBER
@@ -277,49 +278,57 @@ void traverse(Node* cur)
         return;
     }
 
-    // cout << "cur type: " << cur->type << ", and cur value: " << cur->ival << endl;
     traverse(cur->left);
     traverse(cur->right);
+    // cout << "cur type: " << cur->type << ", and cur value: " << cur->val << endl;
 
     if (cur->type == "pn") {
-        printf("%d\n", cur->left->ival);
+        printf("%d\n", cur->left->val);
     } else if (cur->type == "pb") {
-        if (cur->left->bval == true)  printf("#t\n");
-        else    printf("#f\n");
+        if (cur->left->val == FALSENUM)  printf("#f\n");
+        else    printf("#t\n");
     } else if (cur->type == "+") {
-        cur->ival = cur->left->ival + cur->right->ival;
+        cur->val = cur->left->val + cur->right->val;
     } else if (cur->type == "-") {
-        cur->ival = cur->left->ival - cur->right->ival;
+        cur->val = cur->left->val - cur->right->val;
     } else if (cur->type == "*") {
-        cur->ival = cur->left->ival * cur->right->ival;
+        cur->val = cur->left->val * cur->right->val;
     } else if (cur->type == "/") {
-        cur->ival = cur->left->ival / cur->right->ival;
+        cur->val = cur->left->val / cur->right->val;
     } else if (cur->type == "%") {
-        cur->ival = cur->left->ival % cur->right->ival;
+        cur->val = cur->left->val % cur->right->val;
     } else if (cur->type == "&") {
-        cur->bval = cur->left->bval && cur->right->bval;
+        if (cur->left->val == FALSENUM || cur->right->val == FALSENUM)
+            cur->val = FALSENUM;
+        else
+            cur->val = 1;
     } else if (cur->type == "|") {
-        cur->bval = cur->left->bval || cur->right->bval;
+        if (cur->left->val == FALSENUM && cur->right->val == FALSENUM)
+            cur->val = FALSENUM;
+        else
+            cur->val = 1;
     } else if (cur->type == "!") {
-        cur->bval = !cur->left->bval;
+        if (cur->left->val == 1)
+            cur->val = FALSENUM;
+        else if (cur->left->val == 0)
+            cur->val = 1;
     } else if (cur->type == ">") {
-        if (cur->left->ival > cur->right->ival) {
-            cur->bval = true;
+        if (cur->left->val > cur->right->val) {
+            cur->val = 1;
         } else {
-            cur->bval = false;
+            cur->val = FALSENUM;
         }
     } else if (cur->type == "<") {
-        if (cur->left->ival < cur->right->ival) {
-            cur->bval = true;
+        if (cur->left->val < cur->right->val) {
+            cur->val = 1;
         } else {
-            cur->bval = false;
+            cur->val = FALSENUM;
         }
     } else if (cur->type == "=") {
-        cout << cur->left->ival << " " << cur->right->ival << endl;
-        if (cur->left->ival == cur->right->ival) {
-            cur->bval = true;
+        if (cur->left->val == cur->right->val) {
+            cur->val = cur->left->val;
         } else {
-            cur->bval = false;
+            cur->val = FALSENUM;
         }
     }
 

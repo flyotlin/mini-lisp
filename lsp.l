@@ -6,6 +6,7 @@ extern "C" {
     int yywrap(void);
     int yylex(void);
 }
+extern int FALSENUM;
 %}
 
 separator "\t"|"\n"|"\r"|" "
@@ -26,16 +27,16 @@ digit [0-9]
     yylval = new Node();
     yylval->type = "b";
     if (!strcmp(yytext, "#t"))
-        yylval->bval = true;
+        yylval->val = 1;
     else if (!strcmp(yytext, "#f"))
-        yylval->bval = false;
+        yylval->val = FALSENUM;
     return BOOLEAN;
 }
 
 0|[1-9]{digit}*|"-"[1-9]{digit}* {  /* Positive Number and 0 */
     yylval = new Node();
     yylval->type = "d";
-    yylval->ival = atoi(yytext);
+    yylval->val = atoi(yytext);
     return NUMBER;
 }
 
