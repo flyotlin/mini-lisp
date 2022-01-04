@@ -8,6 +8,7 @@ extern "C" {
 
 Node* root;
 Node* createNode(Node*, Node*, string);
+Node* createNode(Node*, Node*, Node*, string);
 void traverse(Node*);
 int FALSENUM = -2342377;
 %}
@@ -243,19 +244,27 @@ PARAMS:
 ;
 
 IF-EXP:
-    '(' IF_STMT TEST-EXP THAN-EXP ELSE-EXP
+    '(' IF_STMT TEST-EXP THAN-EXP ELSE-EXP ')' {
+        $$ = createNode($4, $5, $3, "if");
+    }
 ;
 
 TEST-EXP:
-    EXP
+    EXP {
+        $$ = $1;
+    }
 ;
 
 THAN-EXP:
-    EXP
+    EXP {
+        $$ = $1;
+    }
 ;
 
 ELSE-EXP:
-    EXP
+    EXP {
+        $$ = $1;
+    }
 ;
 
 %%
@@ -271,6 +280,18 @@ Node* createNode(Node* left, Node* right, string type)
     return cur;
 }
 
+Node* createNode(Node* left, Node* right, Node* cond, string type)
+{
+    Node* cur = new Node();
+
+    cur->type = type;
+    cur->left = left;
+    cur->right = right;
+    cur->cond = cond;
+
+    return cur;
+}
+
 void traverse(Node* cur)
 {
     if (!cur) {
@@ -278,9 +299,9 @@ void traverse(Node* cur)
         return;
     }
 
+    // cout << "cur type: " << cur->type << ", and cur value: " << cur->val << endl;
     traverse(cur->left);
     traverse(cur->right);
-    // cout << "cur type: " << cur->type << ", and cur value: " << cur->val << endl;
 
     if (cur->type == "pn") {
         printf("%d\n", cur->left->val);
@@ -329,6 +350,15 @@ void traverse(Node* cur)
             cur->val = cur->left->val;
         } else {
             cur->val = FALSENUM;
+        }
+    } else if (cur->type == "if") {
+        traverse(cur->cond);
+        if (cur->cond->val == FALSENUM) {
+            // cout << "false\n";
+            cur->val = cur->right->val;
+        } else {
+            cur->val = cur->left->val;
+            // printf("true %d\n", cur->val);
         }
     }
 
