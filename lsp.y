@@ -6,13 +6,14 @@ extern "C" {
     extern int yylex(void);
 }
 
-Node* root;
 Node* createNode(Node*, Node*, string);
 Node* createNode(Node*, Node*, Node*, string);
 void traverse(Node*);
+
+Node* root;
 int FALSENUM = -2342377;
 unordered_map<string, Node*> global_vars;
-stack<unordered_map<string, Node*>> func_stack;   // function first refers to local var in func_stack, then check global_vars
+stack<unordered_map<string, int>> func_stack;   // function first refers to local var in func_stack, then check global_vars
 %}
 
 %token NUMBER
@@ -63,8 +64,9 @@ EXP:
         $$ = $1;
     }
     | VARIABLE {
-        $1->val = global_vars[$1->sval]->val;
+        // $1->val = global_vars[$1->sval]->val;
         $$ = $1;
+        $$->type = "var";
     }
     | NUM-OP {
         $$ = $1;
@@ -221,34 +223,55 @@ VARIABLE:
 FUN-EXP:
     '(' FUN_DECL FUN_IDs FUN-BODY ')' {
         // FUN-EXP直接存要被evaluate的EXP
+        $$ = createNode($3, $4, "func");
     }
 ;
 
 FUN-ID:
-    ID FUN-ID
-    |
+    ID FUN-ID {
+        $1->left = $2;
+        $1->right = NULL;
+        $$ = $1;
+    }
+    | {
+        $$ = NULL;
+    }
 ;
 
 FUN_IDs:
-    '(' FUN-ID ')'
+    '(' FUN-ID ')' {
+        $$ = $2;
+    }
 ;
 
 FUN-BODY:
-    EXP
+    EXP {
+        $$ = $1;
+    }
 ;
 
 FUN-CALL:
-    '(' FUN-EXP PARAMS ')'
+    '(' FUN-EXP PARAMS ')' {
+        $$ = createNode($3, $2, "func_call");
+    }
     | '(' FUN-NAME PARAMS ')'
 ;
 
 FUN-NAME:
-    ID
+    ID {
+        $$ = $1;
+    }
 ;
 
 PARAMS:
-    EXP PARAMS
-    |
+    EXP PARAMS {
+        $1->left = $2;
+        $1->right = NULL;
+        $$ = $1;
+    }
+    | {
+        $$ = NULL;
+    }
 ;
 
 IF-EXP:
@@ -306,8 +329,8 @@ void traverse(Node* cur)
         // cout << "cur type: null" << endl;
         return;
     }
-
-    // cout << "cur type: " << cur->type << ", and cur value: " << cur->val << endl;
+    // if (cur->type == "s") cout << "cur type: " << cur->type << ", and cur value: " << cur->sval << endl;
+    // else cout << "cur type: " << cur->type << ", and cur value: " << cur->val << endl;
     traverse(cur->left);
     traverse(cur->right);
 
@@ -365,6 +388,43 @@ void traverse(Node* cur)
             cur->val = cur->right->val;
         } else {
             cur->val = cur->left->val;
+        }
+    } else if (cur->type == "func_call") {
+        Node *x = cur->left;
+        Node *y = cur->right->left;
+
+        unordered_map<string, int> locals;
+        while (x && y) {
+            locals[y->sval] = x->val;
+            x = x->left;
+            y = y->left;
+        }
+        
+        // cout << "local stack:\n";
+        // for (auto i : locals)
+        //     cout << i.first << ": " << i.second << "\n";
+        // cout << "\n\n";
+        func_stack.push(locals);
+        traverse(cur->right->right);
+        cur->right->val = cur->right->right->val;
+        cur->val = cur->right->right->val;
+        func_stack.pop();
+    } else if (cur->type == "var") {
+        // assume only one layer of function call (no recursion)
+        if (func_stack.empty()) {
+            // cout << "empty\n";
+            if (global_vars.find(cur->sval) != global_vars.end())
+                cur->val = global_vars[cur->sval]->val;
+        } else {
+            // cout << "not empty\n";
+            auto local_vars = func_stack.top();
+            if (local_vars.find(cur->sval) != local_vars.end()) {   // find in local first
+                cur->val = local_vars[cur->sval];
+            } else {
+                if (global_vars.find(cur->sval) != global_vars.end()) {  // find in global
+                    cur->val = global_vars[cur->sval]->val;
+                }
+            }
         }
     }
 }

@@ -68,7 +68,7 @@ digit [0-9]
     return DEFINE_VAR;
 }
 
-"fun" {
+"fun"|"lambda" {
     return FUN_DECL;
 }
 
