@@ -1,5 +1,9 @@
-/ref
+/ref/smli
+/ref/**/*.pdf
+/ref/*.zip
 .DS_Store
 lex.yy.*
 y.tab.*
 minilsp
+input
+output
