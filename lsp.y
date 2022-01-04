@@ -11,6 +11,7 @@ Node* createNode(Node*, Node*, string);
 Node* createNode(Node*, Node*, Node*, string);
 void traverse(Node*);
 int FALSENUM = -2342377;
+unordered_map<string, int> global_vars;
 %}
 
 %token NUMBER
@@ -60,7 +61,10 @@ EXP:
     | NUMBER {
         $$ = $1;
     }
-    | VARIABLE
+    | VARIABLE {
+        $1->val = global_vars[$1->sval];
+        $$ = $1;
+    }
     | NUM-OP {
         $$ = $1;
     }
@@ -203,7 +207,10 @@ NOT-OP:
 ;
 
 DEF-STMT:
-    '(' DEFINE_VAR VARIABLE EXP ')'
+    '(' DEFINE_VAR VARIABLE EXP ')' {
+        traverse($4);
+        global_vars[$3->sval] = $4->val;
+    }
 ;
 
 VARIABLE:
@@ -354,14 +361,11 @@ void traverse(Node* cur)
     } else if (cur->type == "if") {
         traverse(cur->cond);
         if (cur->cond->val == FALSENUM) {
-            // cout << "false\n";
             cur->val = cur->right->val;
         } else {
             cur->val = cur->left->val;
-            // printf("true %d\n", cur->val);
         }
     }
-
 }
 
 void yyerror(const char *msg)
