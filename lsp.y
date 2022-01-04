@@ -64,7 +64,6 @@ EXP:
         $$ = $1;
     }
     | VARIABLE {
-        // $1->val = global_vars[$1->sval]->val;
         $$ = $1;
         $$->type = "var";
     }
@@ -222,7 +221,6 @@ VARIABLE:
 
 FUN-EXP:
     '(' FUN_DECL FUN_IDs FUN-BODY ')' {
-        // FUN-EXP直接存要被evaluate的EXP
         $$ = createNode($3, $4, "func");
     }
 ;
@@ -340,11 +338,10 @@ Node* createNode(Node* left, Node* right, Node* cond, string type)
 void traverse(Node* cur)
 {
     if (!cur) {
-        // cout << "cur type: null" << endl;
         return;
     }
-    // if (cur->type == "s") cout << "cur type: " << cur->type << ", and cur value: " << cur->sval << endl;
-    // else cout << "cur type: " << cur->type << ", and cur value: " << cur->val << endl;
+    
+    // postorder traversal
     traverse(cur->left);
     traverse(cur->right);
 
@@ -414,23 +411,19 @@ void traverse(Node* cur)
             y = y->left;
         }
         
-        // cout << "local stack:\n";
-        // for (auto i : locals)
-        //     cout << i.first << ": " << i.second << "\n";
-        // cout << "\n\n";
         func_stack.push(locals);
+
         traverse(cur->right->right);
         cur->right->val = cur->right->right->val;
         cur->val = cur->right->right->val;
+
         func_stack.pop();
     } else if (cur->type == "var") {
         // assume only one layer of function call (no recursion)
         if (func_stack.empty()) {
-            // cout << "empty\n";
             if (global_vars.find(cur->sval) != global_vars.end())
                 cur->val = global_vars[cur->sval]->val;
         } else {
-            // cout << "not empty\n";
             auto local_vars = func_stack.top();
             if (local_vars.find(cur->sval) != local_vars.end()) {   // find in local first
                 cur->val = local_vars[cur->sval];
@@ -453,5 +446,7 @@ int main(int argc, char *argv[])
     yyparse();
 
     traverse(root);
+    delete root;
+
     return 0;
 }

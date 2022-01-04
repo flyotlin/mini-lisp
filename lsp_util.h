@@ -11,13 +11,6 @@
 
 using namespace std;
 
-// mini-lisp type function
-struct func_t {
-    vector<int> vec;
-    string func_name;
-};
-typedef struct func_t func;
-
 // overwritten YYSTYPE (yylval)
 struct Node {
     string type;
